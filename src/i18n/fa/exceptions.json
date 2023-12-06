@@ -1,0 +1,39 @@
+{
+   "user": {
+       "USER_NOT_FOUND": "کاربری با این مشخصات یافت نشد.",
+       "ALREADY_REGISTERED_USER": "کاربری با این مشخصات قبلا ثبت شده است.",
+       "NO_ACTIVE_USER": "کاربر گرامی عزیز حساب کاربری شما غیرفعال است.",
+       "CHECK_PREVIOUS_PHONE_NUMBER": "شماره موبایل وارد شده با قبلی یکیسان است.",
+       "NO_ACTIVE_PHONE_USER": "کاربر گرامی شماره همراه شما احراز نشده است.",
+       "NO_ACTIVE_EMAIL_USER": "کاربر گرامی ایمیل شما احراز نشده است.",
+       "EMAIL_IS_ALREADY": "ایمیل وارد شده قبلا ثبت شده است.",
+       "MOBILE_IS_ALREADY": "شماره همراه وارد شده قبلا ثبت شده است.",
+       "THERE_IS_NO_EMAIL": "ایمیلی در حساب شما وجود ندارد.",
+       "THERE_IS_NO_MOBILE": "شماره موبایلی در حساب شما وجود ندارد.",
+       "USER_FORBIDDEN": "دسترسی ممنوع است.",
+       "USER_ROLE_DENIED": "نقش کاربر مورد تایید نمی باشد.",
+       "USER_VERIFIED_MOBILE": "شماره همراه شما قبلا احراز هویت شده است.",
+       "USER_VERIFIED_EMAIL": "ایمیل شما قبلا احراز هویت شده است.",
+       "AUTHENTICATION_FAILED": "احراز هویت ناموفق بود.",
+       "REFRESH_TOKEN_NOT_FOUND": "رفرش توکن یافت نشد.",
+       "REFRESH_TOKEN_FAILED": "رفرش توکن شما فاقد اعتبار است.",
+       "BIRTHDAY_NOT_CHANGED": "تاریخ تولد غیر قابل تغییر است. (در سال فقط یکبار ممکن است.)",
+       "SESSION_NOT_FOUND": "نشست مورد نظر یافت نشد."
+   },
+    "userAddress": {
+        "IS_EXIST_ADDRESS": "آدرس قبلا ثبت شده است.",
+        "NOT_FOUND_ADDRESS": "آدرسی با این مشخصات یافت نشد."
+    },
+    "request": {
+        "REQUEST_NOT_FOUND": "درخواستی یافت نشد.",
+        "INVALID_REQUEST": "درخواست نامعتبر است.",
+        "ITEM_NOT_FOUND": "مورد انتخابی شما یافت نشد.",
+        "PREVIOUS_REQUEST_RUNNING": "کاربر عزیز درخواست قبلی شما در حال اجرا می باشد. لطفا منتظر بمانید."
+    },
+    "auth": {
+        "AUTHENTICATION_FAILED": "احراز هویت ناموفق بود.",
+        "REFRESH_TOKEN_NOT_FOUND": "رفرش توکن یافت نشد.",
+        "REFRESH_TOKEN_FAILED": "رفرش توکن معتبر نمی باشد.",
+        "INVALID_CODE_VERIFICATION": "کد احراز هویت نادرست است."
+    }
+}

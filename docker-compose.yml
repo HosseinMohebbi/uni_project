@@ -3,10 +3,25 @@ version: '3.9'
 volumes:
   postgres:
   redis:
+  pgadmin-data:
 
 
 services:
-  database:
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    depends_on:
+      - postgres
+    ports:
+      - "5555:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    restart: always
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+  postgres:
     image: postgres:14
     ports:
       - '3334:5432'
@@ -41,8 +56,4 @@ services:
       - ./.env
     volumes:
       - .:/usr/src/app
-    x-develop:
-      watch:
-        - action: rebuild
-          path: ./src
 

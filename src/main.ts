@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { useContainer } from 'class-validator';
 import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const logger = new Logger();
@@ -40,7 +41,11 @@ async function bootstrap() {
       transformOptions: {},
     }),
   );
+
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
   app.enableCors();
+
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   await app.listen(configService.get('PORT'));
   logger.log(`Application listening on port ${configService.get('PORT')}`);
