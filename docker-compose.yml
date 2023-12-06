@@ -44,5 +44,5 @@ services:
     x-develop:
       watch:
         - action: rebuild
-          path: .
+          path: ./src
 
