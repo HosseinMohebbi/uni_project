@@ -5,14 +5,13 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
+COPY prisma ./prisma/
 
 RUN npm install
 
 RUN npm install prisma @prisma/client
 
 ADD . /app
-
-RUN npx prisma generate
 
 RUN npm run build
 
@@ -26,6 +25,13 @@ ENV NODE_ENV=${NODE_ENV}
 
 COPY --from=build /app /app
 
+COPY ./entrypoint.sh .
+COPY ./wait-for.sh .
+
+RUN npx prisma generate
+
 EXPOSE 3000
+
+ENTRYPOINT [ "./entrypoint.sh" ]
 
 CMD [ "npm", "run", "start:prod" ]

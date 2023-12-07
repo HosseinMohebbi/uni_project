@@ -22,7 +22,9 @@ services:
       - pgadmin-data:/var/lib/pgadmin
 
   postgres:
+    container_name: postgres
     image: postgres:14
+    restart: always
     ports:
       - '5432:5432'
     env_file:
@@ -50,13 +52,10 @@ services:
       dockerfile: ./Dockerfile
       target: development
     command: npm run start
-    depends_on:
-      - postgres
-      - redis
     ports:
       - "3000:3000"
-    env_file:
-      - .env
+    environment:
+      POSTGRES_HOST: postgres
     volumes:
       - .:/usr/src/app
 
