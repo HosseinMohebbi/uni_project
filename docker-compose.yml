@@ -24,7 +24,7 @@ services:
   postgres:
     image: postgres:14
     ports:
-      - '3334:5432'
+      - '5432:5432'
     env_file:
       - .env
     environment:
