@@ -26,7 +26,7 @@ services:
     ports:
       - '3334:5432'
     env_file:
-      - ./.env
+      - .env
     environment:
       TZ: ${TZ}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -50,10 +50,13 @@ services:
       dockerfile: ./Dockerfile
       target: development
     command: npm run start
+    depends_on:
+      - postgres
+      - redis
     ports:
       - "3000:3000"
     env_file:
-      - ./.env
+      - .env
     volumes:
       - .:/usr/src/app
 

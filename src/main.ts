@@ -1,23 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { useContainer } from 'class-validator';
 import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
-import * as bodyParser from 'body-parser';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const logger = new Logger();
-
-  const appContext = await NestFactory.createApplicationContext(
-    ConfigModule.forRoot(),
-  );
-  const configService = appContext.get<ConfigService>(ConfigService);
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get<ConfigService>(ConfigService);
   const isDevelopment = configService.get('NODE_ENV') === 'development';
-  const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'debug', 'log', 'verbose'],
-  });
 
   if (isDevelopment) {
     const config = new DocumentBuilder()
@@ -41,14 +34,12 @@ async function bootstrap() {
       transformOptions: {},
     }),
   );
-
-  app.use(bodyParser.json({ limit: '50mb' }));
-  app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+  app.useLogger(app.get(Logger));
+  app.use(cookieParser());
   app.enableCors();
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
-  await app.listen(configService.get('PORT'));
-  logger.log(`Application listening on port ${configService.get('PORT')}`);
+  await app.listen(configService.get<number>('PORT'));
 }
 
 bootstrap();
