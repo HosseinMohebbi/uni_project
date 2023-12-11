@@ -18,21 +18,23 @@
 
 This project is developed using NestJS, Prisma, and PostgreSQL. It also utilizes Swagger for API documentation and Docker Compose for running PgAdmin.
 
+***
 
 ## PgAdmin
-To access PgAdmin, use http://localhost:5555/. Login credentials for PgAdmin are available in the docker-compose.yml file.
+<img src="https://tu-graz-library.github.io/docs-repository/services/images/pgadmin-login.png?raw=true" alt="pgAdmin image example">
 
+To access PgAdmin, use http://localhost:5555/. Login credentials for PgAdmin are available in the docker-compose.yml file.
+***
 ## API Documentation
 
-To view and test the API, use Swagger UI at http://localhost:3000/api.
+<img src="https://addons.mozilla.org/user-media/previews/full/192/192679.png?modified=1622132852" alt="swagger image example">
 
+To view and test the API, use Swagger UI at http://localhost:3000/api.
+***
 ## Known Issues
 There are currently no known issues.
-
----
-
+***
 ## commands
-
 #### Build and Start Docker Containers
 
 ```bash
