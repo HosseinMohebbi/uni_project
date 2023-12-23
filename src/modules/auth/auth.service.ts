@@ -18,12 +18,13 @@ export class AuthService {
 
   async register(data: Register) {
     let user = await this.usersService.findOne({
-      OR: [{ mobile: data.mobile }, { email: data.email }],
+      OR: [{ email: data.email }],
     });
     if (user) {
       throw new BadRequestException(UserErrorEnum.ALREADY_REGISTERED_USER);
     }
     user = await this.usersService.create(data, { Profile: true });
+    await this.usersService.update(user.id, { lastLogin: new Date() });
     const { accessToken, refreshToken } =
       await this.tokenService.getTokens(user);
 
@@ -47,6 +48,7 @@ export class AuthService {
     ) {
       throw new NotFoundException(UserErrorEnum.USER_NOT_FOUND);
     }
+    await this.usersService.update(user.id, { lastLogin: new Date() });
     const { accessToken, refreshToken } =
       await this.tokenService.getTokens(user);
     return {

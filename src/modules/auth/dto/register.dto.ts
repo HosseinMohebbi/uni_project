@@ -1,27 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
 
 export class RegisterDto {
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @MaxLength(40, {
-    message: i18nValidationMessage('auth-validations.firstnameMaxLength'),
+  @ApiProperty({ required: true })
+  @IsNotEmpty({
+    message: i18nValidationMessage('auth-validations.nicknameIsNotEmpty'),
   })
-  firstName?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
   @MaxLength(40, {
-    message: i18nValidationMessage('auth-validations.lastnameMaxLength'),
+    message: i18nValidationMessage('auth-validations.nicknameMaxLength'),
   })
-  lastName?: string;
+  nickName: string;
 
   @ApiProperty({ required: true })
   @IsNotEmpty({

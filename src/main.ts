@@ -10,7 +10,8 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get<ConfigService>(ConfigService);
-  const isDevelopment = configService.get('NODE_ENV') === 'development';
+  const isDevelopment =
+    configService.get<string>('NODE_ENV').toLowerCase() === 'development';
 
   if (isDevelopment) {
     const config = new DocumentBuilder()

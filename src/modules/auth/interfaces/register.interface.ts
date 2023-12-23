@@ -1,8 +1,5 @@
 export interface Register {
-  mobile?: string;
-  password: string;
+  nickName: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  birthday?: Date | string;
+  password: string;
 }

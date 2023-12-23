@@ -15,12 +15,10 @@ export class UsersService {
     const user = await this.prisma.users.create({
       data: {
         email: data.email,
-        mobile: data.mobile,
         password: data.password,
         Profile: {
           create: {
-            firstName: data.firstName,
-            lastName: data.lastName,
+            nickName: data.nickName,
           },
         },
       },

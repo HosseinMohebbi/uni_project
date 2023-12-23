@@ -31,7 +31,7 @@ export class AuthController {
     response.cookie('refresh-token', refreshToken, { httpOnly: true });
     return ResponseHandler.successAuth({
       message: this.i18n.t('messages.admin.auth.login', {
-        args: { name: `${user.Profile?.firstName || 'کاربر'}` },
+        args: { name: `${user.Profile?.nickName || 'کاربر'}` },
       }),
     });
   }
@@ -48,7 +48,7 @@ export class AuthController {
     response.cookie('refresh-token', refreshToken, { httpOnly: true });
     return ResponseHandler.successAuth({
       message: this.i18n.t('messages.admin.auth.login', {
-        args: { name: `${user.Profile?.firstName || 'کاربر'}` },
+        args: { name: `${user.Profile?.nickName || 'کاربر'}` },
       }),
     });
   }

@@ -30,11 +30,7 @@ export class UserEntity implements Users {
   transformProfileUser() {
     if (!this.Profile) return undefined;
     return {
-      firstName: this.Profile?.firstName,
-      lastName: this.Profile?.lastName,
-      birthday: this.Profile?.birthday,
-      gender: this.Profile?.gender,
-      avatar: this.Profile['Avatar']?.url,
+      nickName: this.Profile.nickName,
     };
   }
 }
