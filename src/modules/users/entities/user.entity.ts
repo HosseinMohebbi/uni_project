@@ -1,6 +1,5 @@
-import { Profile, Users } from '@prisma/client';
+import { Profile, Role, Users } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
-import { ConvertorUtl } from '../../../../libs/common/src';
 
 export class UserEntity implements Users {
   id: number;
@@ -13,17 +12,17 @@ export class UserEntity implements Users {
   mobileVerifiedAt: Date | null;
   lastLogin: Date | null;
   isActive: boolean;
-  @Exclude()
+  role: Role;
   createdAt: Date;
-  @Exclude()
   updatedAt: Date;
+  @Exclude()
   Profile?: Profile;
 
   constructor(partial: Partial<UserEntity>, omit?: Array<keyof UserEntity>) {
     omit?.forEach((property) => {
       delete this[property];
     });
-    Object.assign(this, ConvertorUtl.JsonBigintString(partial));
+    Object.assign(this, partial);
   }
 
   @Expose({ name: 'Profile' })

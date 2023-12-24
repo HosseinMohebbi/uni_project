@@ -27,6 +27,15 @@ export class UsersService {
     return new UserEntity(user);
   }
 
+  async findUnique(
+    where?: Prisma.UsersWhereUniqueInput,
+    include?: Prisma.UsersInclude,
+  ) {
+    const user = await this.prisma.users.findUnique({ where, include });
+    if (!user) return null;
+    return user;
+  }
+
   async findOne(
     where?: Prisma.UsersWhereInput,
     include?: Prisma.UsersInclude,
