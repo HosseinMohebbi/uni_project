@@ -6,12 +6,14 @@ WORKDIR /app
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 COPY prisma ./prisma/
+COPY .env ./
+COPY tsconfig.json ./
 
 RUN npm install
 
 RUN npm install prisma @prisma/client
 
-ADD . /app
+COPY . .
 
 RUN npm run build
 
@@ -28,9 +30,9 @@ COPY --from=build /app /app
 COPY ./entrypoint.sh .
 COPY ./wait-for.sh .
 
-RUN npx prisma generate
-
 EXPOSE 3000
+
+RUN chmod +x /app/entrypoint.sh
 
 ENTRYPOINT [ "./entrypoint.sh" ]
 

@@ -1,5 +1,4 @@
 import { Tags } from '@prisma/client';
-import { ConvertorUtl } from '../../../../libs/common/src';
 
 export class TagEntity implements Tags {
   id: number;
@@ -13,6 +12,6 @@ export class TagEntity implements Tags {
     omit?.forEach((property) => {
       delete this[property];
     });
-    Object.assign(this, ConvertorUtl.JsonBigintString(partial));
+    Object.assign(this, partial);
   }
 }

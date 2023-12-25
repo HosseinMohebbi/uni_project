@@ -1,6 +1,22 @@
-/node_modules/
-npm-debug.log
-dist
-storage
-uploadedFiles
-uploads
+# compiled output
+.vscode
+/dist
+/.git
+/node_modules
+# code formatter
+.eslintrc
+.eslintignore
+.editorconfig
+.prettierrc
+.git
+
+# test
+jest.config.js
+
+# docker
+Dockerfile
+docker-compose.yml
+
+# git
+LICENSE
+README.md

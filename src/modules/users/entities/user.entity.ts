@@ -1,4 +1,4 @@
-import { Profile, Role, Users } from '@prisma/client';
+import { Profile, RoleEnum, Users } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
 
 export class UserEntity implements Users {
@@ -12,7 +12,7 @@ export class UserEntity implements Users {
   mobileVerifiedAt: Date | null;
   lastLogin: Date | null;
   isActive: boolean;
-  role: Role;
+  role: RoleEnum;
   createdAt: Date;
   updatedAt: Date;
   @Exclude()

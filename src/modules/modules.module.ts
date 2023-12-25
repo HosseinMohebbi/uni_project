@@ -3,9 +3,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TagsModule } from './tags/tags.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { NewslettersModule } from './newsletters/newsletters.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, TagsModule],
+  imports: [AuthModule, UsersModule, TagsModule, NewslettersModule],
   providers: [
     {
       provide: APP_INTERCEPTOR,

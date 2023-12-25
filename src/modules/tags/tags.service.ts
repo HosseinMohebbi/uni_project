@@ -14,11 +14,12 @@ export class TagsService {
   }
 
   async findAll(
-    where: Prisma.TagsWhereInput,
-    include: Prisma.TagsInclude,
+    where?: Prisma.TagsWhereInput,
+    include?: Prisma.TagsInclude,
+    omit?: Array<keyof TagEntity>,
   ): Promise<TagEntity[]> {
     const tags = await this.prismaService.tags.findMany({ where, include });
-    return tags.map((tag) => new TagEntity(tag));
+    return tags.map((tag) => new TagEntity(tag, omit));
   }
 
   async findOne(
@@ -28,6 +29,15 @@ export class TagsService {
     const tag = await this.prismaService.tags.findFirst({ where, include });
     if (!tag) return null;
     return new TagEntity(tag);
+  }
+
+  async isExistTag(idTag: number[]): Promise<number[]> {
+    const tags: Array<number> = [];
+    for (const id of idTag) {
+      const tag = await this.prismaService.tags.findUnique({ where: { id } });
+      if (tag) tags.push(tag.id);
+    }
+    return tags;
   }
 
   async update(id: number, data: UpdateTag): Promise<TagEntity> {

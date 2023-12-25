@@ -7,24 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum RoleEnum {
   USER
   ADMIN
 }
 
 model Users {
-  id              Int               @id @unique @default(autoincrement())
-  uid             String            @unique @default(uuid())
-  email           String            @unique @db.VarChar(100)
-  emailVerifiedAt DateTime?         @map("email_verified_at")
-  password        String
-  role            Role              @default(USER)
-  lastLogin       DateTime?         @map("last_login")
-  isActive        Boolean           @default(true) @map("is_active")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  Profile         Profile?
-  UserTagsCounter UserTagsCounter[]
+  id                     Int                         @id @unique @default(autoincrement())
+  uid                    String                      @unique @default(uuid())
+  email                  String                      @unique @db.VarChar(100)
+  emailVerifiedAt        DateTime?                   @map("email_verified_at")
+  password               String
+  role                   RoleEnum                    @default(USER)
+  lastLogin              DateTime?                   @map("last_login")
+  isActive               Boolean                     @default(true) @map("is_active")
+  createdAt              DateTime                    @default(now()) @map("created_at")
+  updatedAt              DateTime                    @updatedAt @map("updated_at")
+  Profile                Profile?
+  UserTagsCounter        UserNewsletterTagsCounter[]
+  UserGalleryTagsCounter UserGalleryTagsCounter[]
 
   @@map("users")
 }
@@ -60,78 +61,68 @@ model Files {
 }
 
 model Tags {
-  id               Int                @id @unique @default(autoincrement())
-  name             String
-  slug             String?            @db.VarChar(100)
-  isActive         Boolean            @default(true) @map("is_active")
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
-  NewsletterTags   NewsletterTags[]
-  PhotoGalleryTags PhotoGalleryTags[]
-  UserTagsCounter  UserTagsCounter[]
+  id                     Int                         @id @unique @default(autoincrement())
+  name                   String
+  slug                   String?                     @db.VarChar(100)
+  isActive               Boolean                     @default(true) @map("is_active")
+  createdAt              DateTime                    @default(now()) @map("created_at")
+  updatedAt              DateTime                    @updatedAt @map("updated_at")
+  UserTagsCounter        UserNewsletterTagsCounter[]
+  UserGalleryTagsCounter UserGalleryTagsCounter[]
 
   @@map("tags")
 }
 
 model Newsletters {
-  id             Int              @id @unique @default(autoincrement())
-  title          String
-  description    String           @db.Text
-  isActive       Boolean          @default(true) @map("is_active")
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
-  NewsletterTags NewsletterTags[]
+  id                        Int                         @id @unique @default(autoincrement())
+  title                     String
+  description               String                      @db.Text
+  isActive                  Boolean                     @default(true) @map("is_active")
+  createdAt                 DateTime                    @default(now()) @map("created_at")
+  updatedAt                 DateTime                    @updatedAt @map("updated_at")
+  UserNewsletterTagsCounter UserNewsletterTagsCounter[]
 
   @@map("newsletters")
 }
 
-model NewsletterTags {
+model PhotoGallery {
+  id                     Int                      @id @unique @default(autoincrement())
+  title                  String?
+  description            String?
+  imageId                Int                      @unique @map("image_id")
+  Image                  Files                    @relation(fields: [imageId], references: [id])
+  isActive               Boolean                  @default(true) @map("is_active")
+  createdAt              DateTime                 @default(now()) @map("created_at")
+  updatedAt              DateTime                 @updatedAt @map("updated_at")
+  UserGalleryTagsCounter UserGalleryTagsCounter[]
+
+  @@map("photo_gallery")
+}
+
+model UserNewsletterTagsCounter {
   tagId        Int         @map("tag_id")
   Tag          Tags        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  userId       Int         @map("user_id")
+  User         Users       @relation(fields: [userId], references: [id], onDelete: Cascade)
   newsletterId Int         @map("newsletter_id")
   Newsletter   Newsletters @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  @@unique([newsletterId, tagId])
-  @@map("newsletter_tags")
+  @@unique([userId, tagId, newsletterId])
+  @@map("user_newsletter_tags_counter")
 }
 
-model PhotoGallery {
-  id               Int                @id @unique @default(autoincrement())
-  title            String?
-  description      String?
-  imageId          Int                @unique @map("image_id")
-  Image            Files              @relation(fields: [imageId], references: [id])
-  isActive         Boolean            @default(true) @map("is_active")
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
-  PhotoGalleryTags PhotoGalleryTags[]
-
-  @@map("photo_gallery")
-}
-
-model PhotoGalleryTags {
+model UserGalleryTagsCounter {
   tagId          Int          @map("tag_id")
   Tag            Tags         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  userId         Int          @map("user_id")
+  User           Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
   photoGalleryId Int          @map("photo_gallery_id")
   PhotoGallery   PhotoGallery @relation(fields: [photoGalleryId], references: [id], onDelete: Cascade)
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
-  @@unique([photoGalleryId, tagId])
-  @@map("photo_gallery_tags")
-}
-
-model UserTagsCounter {
-  tagId     Int      @map("tag_id")
-  Tag       Tags     @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  userId    Int      @map("user_id")
-  User      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conter    Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@unique([userId, tagId])
-  @@map("user_tags_counter")
+  @@unique([userId, tagId, photoGalleryId])
+  @@map("user_gallery_tags_counter")
 }
