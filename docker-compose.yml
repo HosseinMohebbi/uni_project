@@ -71,19 +71,19 @@ services:
       MINIO_ENDPOINT: ${MINIO_ENDPOINT}
     command: server --address ":9099" --console-address ":9000" /data
 
-#  app:
-#    container_name: application_backend
-#    depends_on:
-#      - postgres
-#    build:
-#      context: .
-#      dockerfile: ./Dockerfile
-#      target: development
-#    command: npm run start
-#    ports:
-#      - "3000:3000"
-#    networks:
-#      - backend-network
-#    volumes:
-#      - .:/usr/src/app
+  app:
+    container_name: application_backend
+    depends_on:
+      - postgres
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: development
+    command: npm run start
+    ports:
+      - "3000:3000"
+    networks:
+      - backend-network
+    volumes:
+      - .:/usr/src/app
 
