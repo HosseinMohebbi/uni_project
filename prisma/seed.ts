@@ -4,7 +4,7 @@ import HashPasswordUtil from '../libs/common/src/utilities/hash-password.util';
 import { SlugifyHandler } from '../libs/common/src';
 import * as fs from 'fs';
 import * as path from 'path';
-import Minio, { ItemBucketMetadata } from 'minio';
+import * as Minio from 'minio';
 import * as process from 'process';
 
 const prisma = new PrismaClient();
@@ -151,12 +151,21 @@ async function minioFunction(
   if (!bucketExists) {
     await minioClient.makeBucket(bucketName, 'us-east-1');
   }
-  const metaData: ItemBucketMetadata = {
+  const metaData = {
     'Content-Type': 'application/octet-stream',
     'x-amz-expiration': new Date('2300-01-01').toUTCString(),
   };
 
   await minioClient.fPutObject(bucketName, objectName, file, metaData);
+  return await new Promise<string>((resolve, reject) => {
+    minioClient.presignedGetObject(bucketName, objectName, (err, url) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(url);
+      }
+    });
+  });
 }
 
 async function uploadImage() {
@@ -165,12 +174,75 @@ async function uploadImage() {
   const uploadPath: string = __dirname + '/..' + uploadPathName;
   const bucketName: string = 'gallery';
 
-  try {
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath);
+  //test connect to minio:
+  minioClient.bucketExists(bucketName, function (err, exists) {
+    if (err) {
+      logger.error('Error checking bucket existence:', err);
+    } else {
+      if (exists) {
+        logger.log('Bucket exists!');
+      } else {
+        logger.log('Bucket does not exist.');
+      }
     }
+  });
+
+  const infoPhotos = [
+    {
+      title: 'جمعیت',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'تکنولوژی',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'طبیعت',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'برگ درختان آمازون',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'ریل قطار قدیمی',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'یک خانه زیبا در طبیعت',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'پرنده دریایی',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'کارخانه مواد نفتی',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'شهر شلوغ',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+    {
+      title: 'کشور آمریکا',
+      description:
+        'اگر شما یک طراح هستین و یا با طراحی های گرافیکی سروکار دارید به متن های برخورده اید که با نام لورم ایپسوم شناخته می‌شوند.',
+    },
+  ];
+
+  try {
     const files: string[] = fs.readdirSync(imagesPath);
-    for (const filename of files) {
+    for (const [index, filename] of files.entries()) {
       const sourcePath: string = path.join(imagesPath, filename);
       const fileExtension: string = path.extname(filename);
       const fileSize: number = fs.statSync(sourcePath).size;
@@ -178,30 +250,33 @@ async function uploadImage() {
         Math.random() * 1000 * 1000,
       )}${fileExtension}`;
       const destinationPath: string = path.join(uploadPath, newFilename);
-
-      const readStream: fs.ReadStream = fs.createReadStream(sourcePath);
-      const writeStream: fs.WriteStream = fs.createWriteStream(destinationPath);
-      readStream.pipe(writeStream);
-
-      await minioFunction(bucketName);
-
+      const isExist = await prisma.photoGallery.findFirst({
+        where: {
+          title: infoPhotos[index].title,
+          description: infoPhotos[index].description,
+        },
+      });
+      if (isExist) continue;
+      const url = await minioFunction(bucketName, newFilename, sourcePath);
       const file = await prisma.files.create({
         data: {
-          name: newFilename.replace(fileExtension, ''),
+          bucketName,
+          objectName: newFilename.replace(fileExtension, ''),
           path: uploadPathName,
-          url: destinationPath,
+          url,
           size: fileSize,
           extension: fileExtension,
+          disk: 's3',
         },
       });
 
       await prisma.photoGallery.create({
         data: {
           imageId: file.id,
-          title: newFilename.replace(fileExtension, ''),
+          title: infoPhotos[index].title,
+          description: infoPhotos[index].description,
         },
       });
-
       logger.warn(
         `File "${filename}" successfully copied to "${uploadPath}" ${destinationPath}.`,
       );
@@ -212,35 +287,35 @@ async function uploadImage() {
 }
 
 (async () => {
-  // try {
-  //   await newAdmin();
-  //   logger.log('* newAdmin successfully!');
-  // } catch (e) {
-  //   logger.error(e);
-  //   process.exit(1);
-  // } finally {
-  //   await prisma.$disconnect();
-  // }
-  //
-  // try {
-  //   await addTags();
-  //   logger.log('* addTags successfully!');
-  // } catch (e) {
-  //   logger.error(e);
-  //   process.exit(1);
-  // } finally {
-  //   await prisma.$disconnect();
-  // }
-  //
-  // try {
-  //   await addNewsletter();
-  //   logger.log('* addNewsletter successfully!');
-  // } catch (e) {
-  //   logger.error(e);
-  //   process.exit(1);
-  // } finally {
-  //   await prisma.$disconnect();
-  // }
+  try {
+    await newAdmin();
+    logger.log('* newAdmin successfully!');
+  } catch (e) {
+    logger.error(e);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+
+  try {
+    await addTags();
+    logger.log('* addTags successfully!');
+  } catch (e) {
+    logger.error(e);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+
+  try {
+    await addNewsletter();
+    logger.log('* addNewsletter successfully!');
+  } catch (e) {
+    logger.error(e);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
 
   try {
     await uploadImage();

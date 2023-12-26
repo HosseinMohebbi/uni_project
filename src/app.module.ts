@@ -6,8 +6,6 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '../libs/common/src';
 import { TokenModule } from './jwt/token.module';
 import { ModulesModule } from './modules/modules.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import * as path from 'path';
 
 @Module({
   imports: [
@@ -16,9 +14,6 @@ import * as path from 'path';
     ConfigModule,
     TranslationModule,
     PrismaModule,
-    ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '../public/images'),
-    }),
   ],
   providers: [
     {
