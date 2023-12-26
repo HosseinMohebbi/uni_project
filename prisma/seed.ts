@@ -2,9 +2,21 @@ import { PrismaClient, RoleEnum } from '@prisma/client';
 import { Logger } from '@nestjs/common';
 import HashPasswordUtil from '../libs/common/src/utilities/hash-password.util';
 import { SlugifyHandler } from '../libs/common/src';
+import * as fs from 'fs';
+import * as path from 'path';
+import Minio, { ItemBucketMetadata } from 'minio';
+import * as process from 'process';
 
 const prisma = new PrismaClient();
 const logger = new Logger('seeder');
+
+const minioClient = new Minio.Client({
+  endPoint: process.env.MINIO_ENDPOINT,
+  port: Number(process.env.MINIO_PORT),
+  useSSL: false,
+  accessKey: process.env.MINIO_ACCESS_KEY,
+  secretKey: process.env.MINIO_SECRET_KEY,
+});
 
 async function newAdmin() {
   const adminInfo = {
@@ -69,6 +81,10 @@ async function addTags() {
       name: 'سینما',
       slug: SlugifyHandler.persianSlug('سینما'),
     },
+    {
+      name: 'تکنولوژی',
+      slug: SlugifyHandler.persianSlug('تکنولوژی'),
+    },
   ];
   for (const tag of tags) {
     const findTag = await prisma.tags.findFirst({
@@ -125,30 +141,110 @@ async function addNewsletter() {
   }
 }
 
+async function minioFunction(
+  bucketName: string,
+  objectName: string,
+  file: string,
+) {
+  bucketName = bucketName.toLowerCase();
+  const bucketExists = await minioClient.bucketExists(bucketName);
+  if (!bucketExists) {
+    await minioClient.makeBucket(bucketName, 'us-east-1');
+  }
+  const metaData: ItemBucketMetadata = {
+    'Content-Type': 'application/octet-stream',
+    'x-amz-expiration': new Date('2300-01-01').toUTCString(),
+  };
+
+  await minioClient.fPutObject(bucketName, objectName, file, metaData);
+}
+
+async function uploadImage() {
+  const imagesPath: string = __dirname + '/..' + '/public/images';
+  const uploadPathName: string = '/public/uploads';
+  const uploadPath: string = __dirname + '/..' + uploadPathName;
+  const bucketName: string = 'gallery';
+
+  try {
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath);
+    }
+    const files: string[] = fs.readdirSync(imagesPath);
+    for (const filename of files) {
+      const sourcePath: string = path.join(imagesPath, filename);
+      const fileExtension: string = path.extname(filename);
+      const fileSize: number = fs.statSync(sourcePath).size;
+      const newFilename: string = `${Math.floor(
+        Math.random() * 1000 * 1000,
+      )}${fileExtension}`;
+      const destinationPath: string = path.join(uploadPath, newFilename);
+
+      const readStream: fs.ReadStream = fs.createReadStream(sourcePath);
+      const writeStream: fs.WriteStream = fs.createWriteStream(destinationPath);
+      readStream.pipe(writeStream);
+
+      await minioFunction(bucketName);
+
+      const file = await prisma.files.create({
+        data: {
+          name: newFilename.replace(fileExtension, ''),
+          path: uploadPathName,
+          url: destinationPath,
+          size: fileSize,
+          extension: fileExtension,
+        },
+      });
+
+      await prisma.photoGallery.create({
+        data: {
+          imageId: file.id,
+          title: newFilename.replace(fileExtension, ''),
+        },
+      });
+
+      logger.warn(
+        `File "${filename}" successfully copied to "${uploadPath}" ${destinationPath}.`,
+      );
+    }
+  } catch (e) {
+    logger.error(e);
+  }
+}
+
 (async () => {
-  try {
-    await newAdmin();
-    logger.log('* newAdmin successfully!');
-  } catch (e) {
-    logger.error(e);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
-  }
+  // try {
+  //   await newAdmin();
+  //   logger.log('* newAdmin successfully!');
+  // } catch (e) {
+  //   logger.error(e);
+  //   process.exit(1);
+  // } finally {
+  //   await prisma.$disconnect();
+  // }
+  //
+  // try {
+  //   await addTags();
+  //   logger.log('* addTags successfully!');
+  // } catch (e) {
+  //   logger.error(e);
+  //   process.exit(1);
+  // } finally {
+  //   await prisma.$disconnect();
+  // }
+  //
+  // try {
+  //   await addNewsletter();
+  //   logger.log('* addNewsletter successfully!');
+  // } catch (e) {
+  //   logger.error(e);
+  //   process.exit(1);
+  // } finally {
+  //   await prisma.$disconnect();
+  // }
 
   try {
-    await addTags();
-    logger.log('* addTags successfully!');
-  } catch (e) {
-    logger.error(e);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
-  }
-
-  try {
-    await addNewsletter();
-    logger.log('* addNewsletter successfully!');
+    await uploadImage();
+    logger.log('* uploadImage successfully!');
   } catch (e) {
     logger.error(e);
     process.exit(1);
