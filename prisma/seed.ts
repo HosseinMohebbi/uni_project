@@ -170,8 +170,6 @@ async function minioFunction(
 
 async function uploadImage() {
   const imagesPath: string = __dirname + '/..' + '/public/images';
-  const uploadPathName: string = '/public/uploads';
-  const uploadPath: string = __dirname + '/..' + uploadPathName;
   const bucketName: string = 'gallery';
 
   //test connect to minio:
@@ -249,7 +247,6 @@ async function uploadImage() {
       const newFilename: string = `${Math.floor(
         Math.random() * 1000 * 1000,
       )}${fileExtension}`;
-      const destinationPath: string = path.join(uploadPath, newFilename);
       const isExist = await prisma.photoGallery.findFirst({
         where: {
           title: infoPhotos[index].title,
@@ -262,7 +259,6 @@ async function uploadImage() {
         data: {
           bucketName,
           objectName: newFilename.replace(fileExtension, ''),
-          path: uploadPathName,
           url,
           size: fileSize,
           extension: fileExtension,
@@ -277,9 +273,81 @@ async function uploadImage() {
           description: infoPhotos[index].description,
         },
       });
-      logger.warn(
-        `File "${filename}" successfully copied to "${uploadPath}" ${destinationPath}.`,
-      );
+      logger.warn(`File "${filename}" successfully copied to "Minio" ${url}.`);
+    }
+  } catch (e) {
+    logger.error(e);
+  }
+}
+
+async function uploadAudio() {
+  const audiosPath: string = __dirname + '/..' + '/public/audios';
+  const bucketName: string = 'audio';
+
+  //test connect to minio:
+  minioClient.bucketExists(bucketName, function (err, exists) {
+    if (err) {
+      logger.error('Error checking bucket existence:', err);
+    } else {
+      if (exists) {
+        logger.log('Bucket exists!');
+      } else {
+        logger.log('Bucket does not exist.');
+      }
+    }
+  });
+
+  const questionInfo = [
+    {
+      title: 'سوال اول',
+      description: 'توضیحات سوال اول ',
+    },
+    {
+      title: 'سوال دوم',
+      description: 'توضیحات سوال دوم ',
+    },
+    {
+      title: 'سوال سوم',
+      description: 'توضیحات سوال سوم ',
+    },
+  ];
+
+  try {
+    const files: string[] = fs.readdirSync(audiosPath);
+    for (const [index, filename] of files.entries()) {
+      const sourcePath: string = path.join(audiosPath, filename);
+      const fileExtension: string = path.extname(filename);
+      const fileSize: number = fs.statSync(sourcePath).size;
+      const newFilename: string = `${Math.floor(
+        Math.random() * 1000 * 1000,
+      )}${fileExtension}`;
+      const isExist = await prisma.listeningQuestions.findFirst({
+        where: {
+          title: questionInfo[index].title,
+          description: questionInfo[index].description,
+        },
+      });
+      if (isExist) continue;
+      const url = await minioFunction(bucketName, newFilename, sourcePath);
+      const file = await prisma.files.create({
+        data: {
+          bucketName,
+          objectName: newFilename.replace(fileExtension, ''),
+          url,
+          size: fileSize,
+          extension: fileExtension,
+          disk: 's3',
+        },
+      });
+
+      await prisma.photoGallery.create({
+        data: {
+          imageId: file.id,
+          title: questionInfo[index].title,
+          description: questionInfo[index].description,
+        },
+      });
+      logger.warn(`File "${filename}" successfully copied to "Minio" ${url}.`);
     }
   } catch (e) {
     logger.error(e);
@@ -320,6 +388,16 @@ async function uploadImage() {
   try {
     await uploadImage();
     logger.log('* uploadImage successfully!');
+  } catch (e) {
+    logger.error(e);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+
+  try {
+    await uploadAudio();
+    logger.log('* uploadAudio successfully!');
   } catch (e) {
     logger.error(e);
     process.exit(1);

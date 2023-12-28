@@ -26,6 +26,8 @@ model Users {
   Profile                Profile?
   UserTagsCounter        UserNewsletterTagsCounter[]
   UserGalleryTagsCounter UserGalleryTagsCounter[]
+  AnswerAudio            ListeningAnswers[]
+  ListeningAnswers       SpeakingAnswers?
 
   @@map("users")
 }
@@ -42,20 +44,22 @@ model Profile {
 }
 
 model Files {
-  id           Int           @id @unique @default(autoincrement())
-  name         String?       @db.VarChar(100)
-  description  String?       @db.VarChar(100)
-  bucketName   String?       @map("bucket_name") @db.VarChar(100)
-  objectName   String?       @map("object_name") @db.VarChar(100)
-  url          String?       @map("url") @db.VarChar(500)
-  path         String?       @db.VarChar(100)
-  extension    String?       @db.VarChar(10)
-  size         Int?
-  disk         String        @default("local") @db.VarChar(100)
-  isActive     Boolean       @default(true) @map("is_active")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  PhotoGallery PhotoGallery?
+  id               Int                  @id @unique @default(autoincrement())
+  name             String?              @db.VarChar(100)
+  description      String?              @db.VarChar(100)
+  bucketName       String?              @map("bucket_name") @db.VarChar(100)
+  objectName       String?              @map("object_name") @db.VarChar(100)
+  url              String?              @map("url") @db.VarChar(500)
+  path             String?              @db.VarChar(100)
+  extension        String?              @db.VarChar(10)
+  size             Int?
+  disk             String               @default("local") @db.VarChar(100)
+  isActive         Boolean              @default(true) @map("is_active")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+  PhotoGallery     PhotoGallery?
+  Audios           ListeningQuestions[]
+  ListeningAnswers SpeakingAnswers[]
 
   @@map("files")
 }
@@ -125,4 +129,58 @@ model UserGalleryTagsCounter {
 
   @@unique([userId, tagId, photoGalleryId])
   @@map("user_gallery_tags_counter")
+}
+
+model ListeningQuestions {
+  id          Int                @id @unique @default(autoincrement())
+  title       String?
+  description String?
+  audioId     Int                @map("audio_id")
+  Audio       Files              @relation(fields: [audioId], references: [id])
+  isActive    Boolean            @default(true) @map("is_active")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  AnswerAudio ListeningAnswers[]
+
+  @@map("listening_questions")
+}
+
+model ListeningAnswers {
+  answer    String             @db.Text
+  audioId   Int                @map("audio_id")
+  Audio     ListeningQuestions @relation(fields: [audioId], references: [id])
+  userId    Int                @map("user_id")
+  User      Users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  @@unique([audioId, userId])
+  @@map("listening_answers")
+}
+
+model SpeakingQuestions {
+  id               Int               @id @unique @default(autoincrement())
+  question         String
+  description      String?
+  isActive         Boolean           @default(true) @map("is_active")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  ListeningAnswers SpeakingAnswers[]
+
+  @@map("speaking_questions")
+}
+
+model SpeakingAnswers {
+  description String?           @db.Text
+  answerId    Int               @map("answer_id")
+  AnswerFile  Files             @relation(fields: [answerId], references: [id])
+  questionId  Int               @map("question_id")
+  Question    SpeakingQuestions @relation(fields: [questionId], references: [id])
+  userId      Int               @unique @map("user_id")
+  User        Users             @relation(fields: [userId], references: [id])
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  @@unique([questionId, userId, answerId])
+  @@map("speaking_answers")
 }
