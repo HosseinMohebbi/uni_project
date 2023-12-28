@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -13,7 +14,7 @@ import { NewslettersService } from './newsletters.service';
 import { DataSetNewsletterDto } from './dto';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards';
-import { ResponseHandler } from '../../../libs/common/src';
+import { QueriesDto, ResponseHandler } from '../../../libs/common/src';
 
 @Controller('newsletters')
 export class NewslettersController {
@@ -22,11 +23,16 @@ export class NewslettersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  async findAll() {
-    const data = await this.newslettersService.findAll({ isActive: true });
+  async findAll(@Query() query: QueriesDto, @Req() req: Request) {
+    const { data, total } = await this.newslettersService.getAllNotAnswered(
+      req.user['id'],
+      { isActive: true },
+      query.pageHandler,
+    );
     return ResponseHandler.successArray({
-      wrap: 'newsletters',
       data,
+      wrap: 'newsletters',
+      meta: { total, pageSize: query?.pageSize, page: query?.page },
     });
   }
 

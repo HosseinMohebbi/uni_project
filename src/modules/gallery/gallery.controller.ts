@@ -6,12 +6,13 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { GalleryService } from './gallery.service';
 import { JwtAuthGuard } from '../auth/guards';
-import { ResponseHandler } from '../../../libs/common/src';
+import { QueriesDto, ResponseHandler } from '../../../libs/common/src';
 import { Request } from 'express';
 import { DataSetGalleryDto } from './dto';
 
@@ -22,14 +23,16 @@ export class GalleryController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  async findAll() {
-    const data = await this.galleryService.findAll(
+  async findAll(@Query() query: QueriesDto, @Req() req: Request) {
+    const { data, total } = await this.galleryService.getAllNotAnswered(
+      req.user['id'],
       { isActive: true },
-      { Image: true },
+      query.pageHandler,
     );
     return ResponseHandler.successArray({
       wrap: 'gallery',
       data,
+      meta: { total, pageSize: query?.pageSize, page: query?.page },
     });
   }
 

@@ -8,6 +8,7 @@ import { GalleryEntity } from './entities/gallery.entity';
 import { Prisma } from '@prisma/client';
 import { DataSetGallery } from './interfaces';
 import { TagsService } from '../tags/tags.service';
+import { Pagination } from '../../../libs/common/src';
 
 @Injectable()
 export class GalleryService {
@@ -15,15 +16,46 @@ export class GalleryService {
     private readonly prismaService: PrismaService,
     private readonly tagService: TagsService,
   ) {}
-  async findAll(
+  async findAll(where?: Prisma.PhotoGalleryWhereInput, query?: Pagination) {
+    const [data, total] = await this.prismaService.$transaction([
+      this.prismaService.photoGallery.findMany({
+        where,
+        include: {
+          Image: true,
+        },
+        take: query?.pageSize,
+        skip: query?.skip ?? 0,
+      }),
+      this.prismaService.photoGallery.count(),
+    ]);
+    return {
+      data: data.map((gallery) => new GalleryEntity(gallery)),
+      total,
+    };
+  }
+
+  async getAllNotAnswered(
+    userId: number,
     where?: Prisma.PhotoGalleryWhereInput,
-    include?: Prisma.PhotoGalleryInclude,
+    query?: Pagination,
   ) {
-    const galleries = await this.prismaService.photoGallery.findMany({
-      where,
-      include,
-    });
-    return galleries.map((gallery) => new GalleryEntity(gallery));
+    const data: GalleryEntity[] = [];
+    const { data: galleries, total } = await this.findAll(where, query);
+    for (const gallery of galleries) {
+      const answers = await this.prismaService.userGalleryTagsCounter.findFirst(
+        {
+          where: {
+            userId,
+            photoGalleryId: gallery.id,
+          },
+        },
+      );
+      if (gallery.id != answers?.photoGalleryId) {
+        data.push(gallery);
+      }
+    }
+
+    return { data, total };
   }
 
   async dataSet(data: DataSetGallery) {

@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { TagEntity } from './entities/tag.entity';
 import { CreateTag, UpdateTag } from './interfaces';
+import { Pagination } from '../../../libs/common/src';
 
 @Injectable()
 export class TagsService {
@@ -16,10 +17,22 @@ export class TagsService {
   async findAll(
     where?: Prisma.TagsWhereInput,
     include?: Prisma.TagsInclude,
+    query?: Pagination,
     omit?: Array<keyof TagEntity>,
-  ): Promise<TagEntity[]> {
-    const tags = await this.prismaService.tags.findMany({ where, include });
-    return tags.map((tag) => new TagEntity(tag, omit));
+  ) {
+    const [data, total] = await this.prismaService.$transaction([
+      this.prismaService.tags.findMany({
+        where,
+        include,
+        take: query?.pageSize,
+        skip: query?.skip ?? 0,
+      }),
+      this.prismaService.tags.count(),
+    ]);
+    return {
+      data: data.map((tag) => new TagEntity(tag, omit)),
+      total,
+    };
   }
 
   async findOne(
