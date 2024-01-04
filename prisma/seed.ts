@@ -178,7 +178,7 @@ async function uploadImage() {
       logger.error('Error checking bucket existence:', err);
     } else {
       if (exists) {
-        logger.log('Bucket exists!');
+        logger.log('Connected: Bucket exists!');
       } else {
         logger.log('Bucket does not exist.');
       }
@@ -290,7 +290,7 @@ async function uploadAudio() {
       logger.error('Error checking bucket existence:', err);
     } else {
       if (exists) {
-        logger.log('Bucket exists!');
+        logger.log('Connected: Bucket exists!');
       } else {
         logger.log('Bucket does not exist.');
       }
@@ -340,9 +340,9 @@ async function uploadAudio() {
         },
       });
 
-      await prisma.photoGallery.create({
+      await prisma.listeningQuestions.create({
         data: {
-          imageId: file.id,
+          audioId: file.id,
           title: questionInfo[index].title,
           description: questionInfo[index].description,
         },
