@@ -13,7 +13,10 @@ export class ErrorHandler {
 
     const json = {
       statusCode: status,
-      message: object['message'].toUpperCase(),
+      message:
+        typeof object['message'] == 'string'
+          ? object['message']?.toUpperCase()
+          : object['message'],
       httpMessage: object['message'],
       timestamp: new Date(),
     };
