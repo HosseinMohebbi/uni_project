@@ -158,6 +158,7 @@ export class QuestionsService {
         userId: data.userId,
         questionId: data.questionId,
         answerId: file.id,
+        description: data.description,
       },
     });
 

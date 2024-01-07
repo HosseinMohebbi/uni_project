@@ -20,7 +20,7 @@ import { QuestionsService } from './questions.service';
 import { JwtAuthGuard } from '../auth/guards';
 import { QueriesDto, ResponseHandler } from '../../../libs/common/src';
 import { Request } from 'express';
-import { ListeningQuestionAnswerDto } from './dto';
+import { ListeningQuestionAnswerDto, SpeakingQuestionAnswerDto } from './dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('questions')
@@ -87,6 +87,7 @@ export class QuestionsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('answer'))
   async speakingQuestionAnswer(
+    @Body() body: SpeakingQuestionAnswerDto,
     @UploadedFile(
       new ParseFilePipe({
         fileIsRequired: true,
@@ -108,6 +109,7 @@ export class QuestionsController {
       userId: req.user['id'],
       questionId: id,
       answer: answer,
+      description: body.description,
     });
 
     return ResponseHandler.success({
