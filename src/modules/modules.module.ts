@@ -5,6 +5,7 @@ import { TagsModule } from './tags/tags.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { NewslettersModule } from './newsletters/newsletters.module';
 import { GalleryModule } from './gallery/gallery.module';
+import { QuestionsModule } from './questions/questions.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { GalleryModule } from './gallery/gallery.module';
     TagsModule,
     NewslettersModule,
     GalleryModule,
+    QuestionsModule,
   ],
   providers: [
     {

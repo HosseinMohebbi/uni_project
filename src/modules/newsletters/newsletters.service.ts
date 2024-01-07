@@ -24,7 +24,7 @@ export class NewslettersService {
         take: query?.pageSize,
         skip: query?.skip ?? 0,
       }),
-      this.prismaService.newsletters.count(),
+      this.prismaService.newsletters.count({ where }),
     ]);
     return {
       data: data.map((newsletter) => new NewsletterEntity(newsletter)),

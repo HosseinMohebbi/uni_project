@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '../libs/common/src';
 import { TokenModule } from './jwt/token.module';
 import { ModulesModule } from './modules/modules.module';
+import { S3Module } from './s3/s3.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ModulesModule } from './modules/modules.module';
     ConfigModule,
     TranslationModule,
     PrismaModule,
+    S3Module,
   ],
   providers: [
     {
