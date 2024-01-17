@@ -30,4 +30,19 @@ export class UsersController {
       data,
     });
   }
+
+  @Get('/info')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async userInfo(@Req() req: Request) {
+    const { user, counterTags } = await this.usersService.userInfo(
+      req?.user['id'],
+    );
+    return ResponseHandler.success({
+      data: {
+        user,
+        counterTags,
+      },
+    });
+  }
 }

@@ -36,6 +36,22 @@ export class NewslettersController {
     });
   }
 
+  @Get('/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async findOne(@Req() req: Request, @Param('id') id: number) {
+    const { newsletter, tags } = await this.newslettersService.findOne(
+      req.user['id'],
+      id,
+    );
+    return ResponseHandler.success({
+      data: {
+        newsletter,
+        tags,
+      },
+    });
+  }
+
   @Post(':id/data-set')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
