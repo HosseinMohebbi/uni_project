@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 import { DataSetGallery } from './interfaces';
 import { TagsService } from '../tags/tags.service';
 import { Pagination } from '../../../libs/common/src';
+import { TagEntity } from '../tags/entities/tag.entity';
 
 @Injectable()
 export class GalleryService {
@@ -16,15 +17,17 @@ export class GalleryService {
     private readonly prismaService: PrismaService,
     private readonly tagService: TagsService,
   ) {}
+
   async findAll(where?: Prisma.PhotoGalleryWhereInput, query?: Pagination) {
     const [data, total] = await this.prismaService.$transaction([
       this.prismaService.photoGallery.findMany({
         where,
-        include: {
-          Image: true,
-        },
         take: query?.pageSize,
         skip: query?.skip ?? 0,
+        select: {
+          id: true,
+          title: true,
+        },
       }),
       this.prismaService.photoGallery.count(),
     ]);
@@ -56,6 +59,32 @@ export class GalleryService {
     }
 
     return { data, total };
+  }
+
+  async findOne(userId: number, id: string | number) {
+    const gallery = await this.prismaService.photoGallery.findFirst({
+      where: { id: Number(id) },
+      include: {
+        Image: true,
+      },
+    });
+    const answered = await this.prismaService.userGalleryTagsCounter.findFirst({
+      where: {
+        userId,
+        photoGalleryId: gallery.id,
+      },
+    });
+    if (!gallery || answered) {
+      throw new NotFoundException('PhotoGallery Not Found!');
+    }
+    const { data: tags } = await this.tagService.findAll({
+      isActive: true,
+    });
+
+    return {
+      gallery: new GalleryEntity(gallery),
+      tags: tags.map((tag) => new TagEntity(tag)),
+    };
   }
 
   async dataSet(data: DataSetGallery) {

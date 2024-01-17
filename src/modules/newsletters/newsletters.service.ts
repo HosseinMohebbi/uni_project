@@ -9,6 +9,7 @@ import { NewsletterEntity } from './entities/newsletter.entity';
 import { TagsService } from '../tags/tags.service';
 import { Prisma } from '@prisma/client';
 import { Pagination } from '../../../libs/common/src';
+import { TagEntity } from '../tags/entities/tag.entity';
 
 @Injectable()
 export class NewslettersService {
@@ -23,6 +24,10 @@ export class NewslettersService {
         where,
         take: query?.pageSize,
         skip: query?.skip ?? 0,
+        select: {
+          id: true,
+          title: true,
+        },
       }),
       this.prismaService.newsletters.count({ where }),
     ]);
@@ -55,6 +60,30 @@ export class NewslettersService {
     }
 
     return { data, total };
+  }
+
+  async findOne(userId: number, id: string | number) {
+    const newsletter = await this.prismaService.newsletters.findFirst({
+      where: { id: Number(id) },
+    });
+    const answered =
+      await this.prismaService.userNewsletterTagsCounter.findFirst({
+        where: {
+          userId,
+          newsletterId: newsletter.id,
+        },
+      });
+    if (!newsletter || answered) {
+      throw new NotFoundException('Newsletter Not Found!');
+    }
+    const { data: tags } = await this.tagService.findAll({
+      isActive: true,
+    });
+
+    return {
+      newsletter: new NewsletterEntity(newsletter),
+      tags: tags.map((tag) => new TagEntity(tag)),
+    };
   }
 
   async dataSet(data: DataSetNewsletter) {

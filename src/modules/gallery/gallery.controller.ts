@@ -35,6 +35,21 @@ export class GalleryController {
       meta: { total, pageSize: query?.pageSize, page: query?.page },
     });
   }
+  @Get('/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async findOne(@Req() req: Request, @Param('id') id: number) {
+    const { gallery, tags } = await this.galleryService.findOne(
+      req.user['id'],
+      id,
+    );
+    return ResponseHandler.success({
+      data: {
+        gallery,
+        tags,
+      },
+    });
+  }
 
   @Post(':id/data-set')
   @HttpCode(HttpStatus.OK)
