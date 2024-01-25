@@ -17,7 +17,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   @Post('register')
   @HttpCode(HttpStatus.OK)
@@ -47,6 +47,9 @@ export class AuthController {
     response.cookie('token', accessToken, { httpOnly: true });
     response.cookie('refresh-token', refreshToken, { httpOnly: true });
     return ResponseHandler.successAuth({
+      data: {
+        token: accessToken,
+      },
       message: this.i18n.t('messages.admin.auth.login', {
         args: { name: `${user.Profile?.nickName || 'کاربر'}` },
       }),
