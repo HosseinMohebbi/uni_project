@@ -4,14 +4,14 @@ import { Prisma } from '@prisma/client';
 import { Pagination } from '../../../libs/common/src';
 import { ListeningQuestionsEntity, SpeakingQuestionsEntity } from './entities';
 import { ListeningQuestionAnswer, SpeakingQuestionAnswer } from './interfaces';
-import { S3Service } from '../../s3/s3.service';
-import { BucketsNameEnum } from '../../s3/enums';
+import { UploadService } from 'src/upload/upload.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class QuestionsService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly fileService: S3Service,
+    private readonly config: ConfigService,
   ) {}
   async listeningQuestionsFindAll(
     where?: Prisma.ListeningQuestionsWhereInput,
@@ -131,12 +131,18 @@ export class QuestionsService {
   }
 
   async speakingQuestionAnswer(data: SpeakingQuestionAnswer) {
+    const fullPath = `${this.config.get<string>(
+      'PUBLIC_PATH',
+    )}/${this.config.get<string>('UPLOAD_PATH')}/${this.config.get<string>(
+      'AUDIOS_UPLOAD_PATH',
+    )}/${data.file.filename}`;
     const findQuestion = await this.prismaService.speakingQuestions.findFirst({
       where: {
         id: data.questionId,
       },
     });
     if (!findQuestion) {
+      UploadService.removeFile(fullPath);
       throw new BadRequestException('This question does not exist');
     }
     const findAnswer = await this.prismaService.speakingAnswers.findFirst({
@@ -146,11 +152,21 @@ export class QuestionsService {
       },
     });
     if (findAnswer) {
+      UploadService.removeFile(fullPath);
       throw new BadRequestException('This question has already been answered');
     }
-    const file = await this.fileService.create({
-      file: data.answer,
-      bucketName: BucketsNameEnum.SPEAKING_ANSWER,
+
+    const url = `${this.config.get<string>(
+      'UPLOAD_PATH',
+    )}/${this.config.get<string>('AUDIOS_UPLOAD_PATH')}/${data.file.filename}`;
+    const file = await this.prismaService.files.create({
+      data: {
+        url: url,
+        path: data.file.destination,
+        size: data.file.size,
+        extension: data.file.mimetype,
+        name: data.file.filename,
+      },
     });
 
     await this.prismaService.speakingAnswers.create({

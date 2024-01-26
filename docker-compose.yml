@@ -10,15 +10,13 @@ networks:
 volumes:
   postgres:
   pgadmin-data:
-  minio:
-
 
 services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
     ports:
-      - "5555:80"
+      - '5555:80'
     depends_on:
       - postgres
     environment:
@@ -49,31 +47,6 @@ services:
     volumes:
       - 'postgres:/var/lib/postgresql/data'
 
-
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio:/data
-      - minio:/root/.minio
-    networks:
-      backend-network:
-      minio_network:
-        ipv4_address: 192.168.0.2
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-    command: server --address ":9099" --console-address ":9000" /data
-
   app:
     container_name: application_backend
     depends_on:
@@ -84,9 +57,8 @@ services:
       target: development
     command: npm run start
     ports:
-      - "3000:3000"
+      - '3000:3000'
     networks:
       - backend-network
     volumes:
       - .:/usr/src/app
-

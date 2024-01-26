@@ -4,19 +4,10 @@ import HashPasswordUtil from '../libs/common/src/utilities/hash-password.util';
 import { SlugifyHandler } from '../libs/common/src';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as Minio from 'minio';
 import * as process from 'process';
 
 const prisma = new PrismaClient();
 const logger = new Logger('seeder');
-
-const minioClient = new Minio.Client({
-  endPoint: process.env.MINIO_ENDPOINT,
-  port: Number(process.env.MINIO_PORT),
-  useSSL: false,
-  accessKey: process.env.MINIO_ACCESS_KEY,
-  secretKey: process.env.MINIO_SECRET_KEY,
-});
 
 async function newAdmin() {
   const adminInfo = {
@@ -141,49 +132,13 @@ async function addNewsletter() {
   }
 }
 
-async function minioFunction(
-  bucketName: string,
-  objectName: string,
-  file: string,
-) {
-  bucketName = bucketName.toLowerCase();
-  const bucketExists = await minioClient.bucketExists(bucketName);
-  if (!bucketExists) {
-    await minioClient.makeBucket(bucketName, 'us-east-1');
-  }
-  const metaData = {
-    'Content-Type': 'application/octet-stream',
-    'x-amz-expiration': new Date('2300-01-01').toUTCString(),
-  };
-
-  await minioClient.fPutObject(bucketName, objectName, file, metaData);
-  return await new Promise<string>((resolve, reject) => {
-    minioClient.presignedGetObject(bucketName, objectName, (err, url) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(url);
-      }
-    });
-  });
-}
-
 async function uploadImage() {
-  const imagesPath: string = __dirname + '/..' + '/public/images';
-  const bucketName: string = 'gallery';
+  const imagesPath: string = path.join(__dirname, '/..', '/public/images');
+  const savePath = `${process.env.UPLOAD_FULL_PATH}/${process.env.IMAGES_UPLOAD_PATH}`;
 
-  //test connect to minio:
-  minioClient.bucketExists(bucketName, function (err, exists) {
-    if (err) {
-      logger.error('Error checking bucket existence:', err);
-    } else {
-      if (exists) {
-        logger.log('Connected: Bucket exists!');
-      } else {
-        logger.log('Bucket does not exist.');
-      }
-    }
-  });
+  if (!fs.existsSync(savePath)) {
+    fs.mkdirSync(savePath, { recursive: true });
+  }
 
   const infoPhotos = [
     {
@@ -254,18 +209,22 @@ async function uploadImage() {
         },
       });
       if (isExist) continue;
-      const url = await minioFunction(bucketName, newFilename, sourcePath);
+      const destinationPath = path.join(savePath, `${newFilename}`);
+      fs.copyFileSync(sourcePath, destinationPath);
+      const url = `${process.env.UPLOAD_PATH}/${process.env.IMAGES_UPLOAD_PATH}/${newFilename}`;
       const file = await prisma.files.create({
         data: {
-          bucketName,
-          objectName: newFilename.replace(fileExtension, ''),
+          name: newFilename,
+          path: path.join(
+            process.env.UPLOAD_FULL_PATH,
+            process.env.IMAGES_UPLOAD_PATH,
+            newFilename,
+          ),
           url,
           size: fileSize,
           extension: fileExtension,
-          disk: 's3',
         },
       });
-
       await prisma.photoGallery.create({
         data: {
           imageId: file.id,
@@ -282,20 +241,11 @@ async function uploadImage() {
 
 async function uploadAudio() {
   const audiosPath: string = __dirname + '/..' + '/public/audios';
-  const bucketName: string = 'audio';
+  const savePath = `${process.env.UPLOAD_FULL_PATH}/${process.env.AUDIOS_UPLOAD_PATH}`;
 
-  //test connect to minio:
-  minioClient.bucketExists(bucketName, function (err, exists) {
-    if (err) {
-      logger.error('Error checking bucket existence:', err);
-    } else {
-      if (exists) {
-        logger.log('Connected: Bucket exists!');
-      } else {
-        logger.log('Bucket does not exist.');
-      }
-    }
-  });
+  if (!fs.existsSync(savePath)) {
+    fs.mkdirSync(savePath, { recursive: true });
+  }
 
   const questionInfo = [
     {
@@ -328,15 +278,20 @@ async function uploadAudio() {
         },
       });
       if (isExist) continue;
-      const url = await minioFunction(bucketName, newFilename, sourcePath);
+      const destinationPath = path.join(savePath, `${newFilename}`);
+      fs.copyFileSync(sourcePath, destinationPath);
+      const url = `${process.env.UPLOAD_PATH}/${process.env.AUDIOS_UPLOAD_PATH}/${newFilename}`;
       const file = await prisma.files.create({
         data: {
-          bucketName,
-          objectName: newFilename.replace(fileExtension, ''),
+          name: newFilename,
+          path: path.join(
+            process.env.UPLOAD_FULL_PATH,
+            process.env.AUDIOS_UPLOAD_PATH,
+            newFilename,
+          ),
           url,
           size: fileSize,
           extension: fileExtension,
-          disk: 's3',
         },
       });
 

@@ -22,10 +22,15 @@ import { QueriesDto, ResponseHandler } from '../../../libs/common/src';
 import { Request } from 'express';
 import { ListeningQuestionAnswerDto, SpeakingQuestionAnswerDto } from './dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadService } from 'src/upload/upload.service';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('questions')
 export class QuestionsController {
-  constructor(private readonly questionsService: QuestionsService) {}
+  constructor(
+    private readonly questionsService: QuestionsService,
+    private readonly config: ConfigService,
+  ) {}
 
   @Get('listening-questions')
   @HttpCode(HttpStatus.OK)
@@ -85,7 +90,9 @@ export class QuestionsController {
   @Post('/:id/speaking-answer')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('answer'))
+  @UseInterceptors(
+    FileInterceptor('answer', UploadService.multerOptions('audios')),
+  )
   async speakingQuestionAnswer(
     @Body() body: SpeakingQuestionAnswerDto,
     @UploadedFile(
@@ -108,7 +115,7 @@ export class QuestionsController {
     await this.questionsService.speakingQuestionAnswer({
       userId: req.user['id'],
       questionId: id,
-      answer: answer,
+      file: answer,
       description: body.description,
     });
 

@@ -6,7 +6,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '../libs/common/src';
 import { TokenModule } from './jwt/token.module';
 import { ModulesModule } from './modules/modules.module';
-import { S3Module } from './s3/s3.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { MulterModule } from '@nestjs/platform-express';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -15,8 +17,15 @@ import { S3Module } from './s3/s3.module';
     ConfigModule,
     TranslationModule,
     PrismaModule,
-    S3Module,
+    MulterModule.register({
+      dest: 'public/uploads',
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: 'public/uploads',
+      serveRoot: '/uploads',
+    }),
   ],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_FILTER,
