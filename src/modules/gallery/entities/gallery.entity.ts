@@ -1,5 +1,7 @@
 import { Files, PhotoGallery } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
+import * as path from 'path';
+import * as process from 'process';
 
 export class GalleryEntity implements PhotoGallery {
   id: number;
@@ -24,6 +26,9 @@ export class GalleryEntity implements PhotoGallery {
 
   @Expose({ name: 'image' })
   transformImage() {
-    return this.Image?.url;
+    return path.join(
+      `${process.env.HOST_URI}:${process.env.PORT}`,
+      this.Image?.url,
+    );
   }
 }

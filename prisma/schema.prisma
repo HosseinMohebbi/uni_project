@@ -27,7 +27,7 @@ model Users {
   UserTagsCounter        UserNewsletterTagsCounter[]
   UserGalleryTagsCounter UserGalleryTagsCounter[]
   AnswerAudio            ListeningAnswers[]
-  ListeningAnswers       SpeakingAnswers?
+  ListeningAnswers       SpeakingAnswers[]
 
   @@map("users")
 }
@@ -176,7 +176,7 @@ model SpeakingAnswers {
   AnswerFile  Files             @relation(fields: [answerId], references: [id])
   questionId  Int               @map("question_id")
   Question    SpeakingQuestions @relation(fields: [questionId], references: [id])
-  userId      Int               @unique @map("user_id")
+  userId      Int               @map("user_id")
   User        Users             @relation(fields: [userId], references: [id])
   createdAt   DateTime          @default(now()) @map("created_at")
   updatedAt   DateTime          @updatedAt @map("updated_at")

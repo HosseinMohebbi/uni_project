@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
-import { QuestionsController } from './questions.controller';
+import { ListeningQuestionsController } from './listening-questions.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { S3Module } from '../../s3/s3.module';
+import { SpeakingQuestionsController } from './speaking-questions.controller';
 
 @Module({
-  imports: [PrismaModule, S3Module],
-  controllers: [QuestionsController],
+  imports: [PrismaModule],
+  controllers: [ListeningQuestionsController, SpeakingQuestionsController],
   providers: [QuestionsService],
 })
 export class QuestionsModule {}

@@ -40,8 +40,11 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
   app.useLogger(app.get(Logger));
   app.use(cookieParser());
-  app.enableCors();
-
+  app.enableCors({
+    origin: '*',
+    allowedHeaders: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  });
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   await app.listen(configService.get<number>('PORT'));
 }

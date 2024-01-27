@@ -16,55 +16,17 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { QuestionsService } from './questions.service';
-import { JwtAuthGuard } from '../auth/guards';
-import { QueriesDto, ResponseHandler } from '../../../libs/common/src';
 import { Request } from 'express';
-import { ListeningQuestionAnswerDto, SpeakingQuestionAnswerDto } from './dto';
+import { JwtAuthGuard } from '../auth/guards';
+import { QueriesDto, ResponseHandler } from 'libs/common/src';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadService } from 'src/upload/upload.service';
+import { SpeakingQuestionAnswerDto } from './dto';
+import { QuestionsService } from './questions.service';
 
 @Controller('questions')
-export class QuestionsController {
+export class SpeakingQuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
-
-  @Get('listening-questions')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
-  async listeningQuestions(@Query() query: QueriesDto, @Req() req: Request) {
-    const { data, total } = await this.questionsService.listeningQuestions(
-      req.user['id'],
-      { isActive: true },
-      query?.pageHandler,
-    );
-    return ResponseHandler.successArray({
-      data,
-      wrap: 'listeningQuestions',
-      meta: { total, pageSize: query?.pageSize, page: query?.page },
-    });
-  }
-
-  @Post('/:id/listening-answer')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
-  async listeningQuestionAnswer(
-    @Body() body: ListeningQuestionAnswerDto,
-    @Req() req: Request,
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    id: number,
-  ) {
-    await this.questionsService.listeningQuestionAnswer({
-      userId: req.user['id'],
-      questionId: id,
-      answer: body.answer,
-    });
-    return ResponseHandler.success({
-      message: 'Data Was Successfully Recorded',
-      httpStatus: HttpStatus.OK,
-    });
-  }
 
   @Get('speaking-questions')
   @HttpCode(HttpStatus.OK)
@@ -82,10 +44,25 @@ export class QuestionsController {
     });
   }
 
+  @Get('speaking-questions/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async findOne(@Req() req: Request, @Param('id') id: number) {
+    const data = await this.questionsService.findOneSpeakingQuestion(
+      req.user['id'],
+      id,
+    );
+    return ResponseHandler.successArray({
+      data,
+    });
+  }
+
   @Post('/:id/speaking-answer')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('answer'))
+  @UseInterceptors(
+    FileInterceptor('answer', UploadService.multerOptions('audios')),
+  )
   async speakingQuestionAnswer(
     @Body() body: SpeakingQuestionAnswerDto,
     @UploadedFile(
@@ -108,7 +85,7 @@ export class QuestionsController {
     await this.questionsService.speakingQuestionAnswer({
       userId: req.user['id'],
       questionId: id,
-      answer: answer,
+      file: answer,
       description: body.description,
     });
 
