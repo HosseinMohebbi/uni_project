@@ -1,5 +1,6 @@
 import { Files, ListeningQuestions } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
+import * as path from 'path';
 
 export class ListeningQuestionsEntity implements ListeningQuestions {
   id: number;
@@ -24,6 +25,9 @@ export class ListeningQuestionsEntity implements ListeningQuestions {
 
   @Expose({ name: 'audio' })
   transformImage() {
-    return this.Audio?.url;
+    return path.join(
+      `${process.env.HOST_URI}:${process.env.PORT}`,
+      this.Audio?.url,
+    );
   }
 }

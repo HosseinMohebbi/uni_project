@@ -135,6 +135,13 @@ async function addNewsletter() {
 async function uploadImage() {
   const imagesPath: string = path.join(__dirname, '/..', '/public/images');
   const savePath = `${process.env.UPLOAD_FULL_PATH}/${process.env.IMAGES_UPLOAD_PATH}`;
+  const uploadsDir = process.env.UPLOAD_PATH;
+  const publicDir = process.env.PUBLIC_PATH;
+  const joinPath = path.join(publicDir, uploadsDir);
+
+  if (!fs.existsSync(joinPath)) {
+    fs.mkdirSync(joinPath, { recursive: true });
+  }
 
   if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath, { recursive: true });
