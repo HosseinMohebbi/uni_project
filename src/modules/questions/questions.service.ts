@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { Pagination } from '../../../libs/common/src';
@@ -102,6 +106,51 @@ export class QuestionsService {
     return { data, total };
   }
 
+  async findOneSpeakingQuestion(userId: number, questionId: number) {
+    const question = await this.prismaService.speakingQuestions.findFirst({
+      where: {
+        id: questionId,
+      },
+    });
+
+    const answered = await this.prismaService.speakingAnswers.findFirst({
+      where: {
+        userId,
+        questionId,
+      },
+    });
+
+    if (!question || answered) {
+      throw new NotFoundException('This question does not exist');
+    }
+
+    return new SpeakingQuestionsEntity(question);
+  }
+
+  async findOneListeningQuestion(userId: number, questionId: number) {
+    const question = await this.prismaService.listeningQuestions.findFirst({
+      where: {
+        id: questionId,
+      },
+      include: {
+        Audio: true,
+      },
+    });
+
+    const answered = await this.prismaService.listeningAnswers.findFirst({
+      where: {
+        userId,
+        questionId,
+      },
+    });
+
+    if (!question || answered) {
+      throw new NotFoundException('This question does not exist');
+    }
+
+    return new ListeningQuestionsEntity(question);
+  }
+
   async listeningQuestionAnswer(data: ListeningQuestionAnswer) {
     const findQuestion = await this.prismaService.listeningQuestions.findFirst({
       where: {
@@ -109,7 +158,7 @@ export class QuestionsService {
       },
     });
     if (!findQuestion) {
-      throw new BadRequestException('This question does not exist');
+      throw new NotFoundException('This question does not exist');
     }
     const findAnswer = await this.prismaService.listeningAnswers.findFirst({
       where: {
@@ -143,7 +192,7 @@ export class QuestionsService {
     });
     if (!findQuestion) {
       UploadService.removeFile(fullPath);
-      throw new BadRequestException('This question does not exist');
+      throw new NotFoundException('This question does not exist');
     }
     const findAnswer = await this.prismaService.speakingAnswers.findFirst({
       where: {
