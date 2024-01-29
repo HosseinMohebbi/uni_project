@@ -1,6 +1,6 @@
-import { Files, ListeningQuestions } from '@prisma/client';
-import { Exclude, Expose } from 'class-transformer';
-import * as path from 'path';
+import { Files, ListeningQuestions } from "@prisma/client";
+import { Exclude, Expose } from "class-transformer";
+import * as path from "path";
 
 export class ListeningQuestionsEntity implements ListeningQuestions {
   id: number;
@@ -15,7 +15,7 @@ export class ListeningQuestionsEntity implements ListeningQuestions {
 
   constructor(
     partial: Partial<ListeningQuestionsEntity>,
-    omit?: Array<keyof ListeningQuestionsEntity>,
+    omit?: Array<keyof ListeningQuestionsEntity>
   ) {
     omit?.forEach((property) => {
       delete this[property];
@@ -23,11 +23,13 @@ export class ListeningQuestionsEntity implements ListeningQuestions {
     Object.assign(this, partial);
   }
 
-  @Expose({ name: 'audio' })
+  @Expose({ name: "audio" })
   transformImage() {
-    return path.join(
-      `${process.env.HOST_URI}:${process.env.PORT}`,
-      this.Audio?.url,
-    );
+    if (this.Audio && this.audioId) {
+      return path.join(
+        `${process.env.HOST_URI}:${process.env.PORT}`,
+        this.Audio?.url
+      ).replaceAll('\\','/').replace(':/','://');
+    }
   }
 }
