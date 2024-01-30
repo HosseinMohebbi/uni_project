@@ -56,34 +56,27 @@ export class UsersService {
       },
     });
     const counterTag = [];
-    let counterNumber = 0;
     for (const tag of tags) {
+      let counterNumber = 0;
       const findTagNewsletter =
-        await this.prisma.userNewsletterTagsCounter.findFirst({
+        await this.prisma.userNewsletterTagsCounter.count({
           where: {
             userId,
             tagId: tag.id,
           },
         });
-      if (findTagNewsletter) {
-        counterNumber++;
-      }
-      const findTagGallery = await this.prisma.userGalleryTagsCounter.findFirst(
-        {
-          where: {
-            userId,
-            tagId: tag.id,
-          },
+      counterNumber += findTagNewsletter;
+      const findTagGallery = await this.prisma.userGalleryTagsCounter.count({
+        where: {
+          userId,
+          tagId: tag.id,
         },
-      );
-      if (findTagGallery) {
-        counterNumber++;
-      }
+      });
+      counterNumber += findTagGallery;
       counterTag.push({
         ...tag,
         count: counterNumber,
       });
-      counterNumber = 0;
     }
     return counterTag;
   }
