@@ -58,24 +58,26 @@ export class UsersService {
     const counterTag = [];
     for (const tag of tags) {
       let counterNumber = 0;
-      const findTagNewsletter =
+      const tagNewsletterCount =
         await this.prisma.userNewsletterTagsCounter.count({
           where: {
             userId,
             tagId: tag.id,
           },
         });
-      counterNumber += findTagNewsletter;
-      const findTagGallery = await this.prisma.userGalleryTagsCounter.count({
+
+      const tagGalleryCount = await this.prisma.userGalleryTagsCounter.count({
         where: {
           userId,
           tagId: tag.id,
         },
       });
-      counterNumber += findTagGallery;
+      counterNumber = tagGalleryCount + tagNewsletterCount;
       counterTag.push({
         ...tag,
         count: counterNumber,
+        gallery: tagGalleryCount,
+        newsletter: tagNewsletterCount,
       });
     }
     return counterTag;
