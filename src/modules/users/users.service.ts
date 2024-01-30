@@ -57,7 +57,6 @@ export class UsersService {
     });
     const counterTag = [];
     for (const tag of tags) {
-      let counterNumber = 0;
       const tagNewsletterCount =
         await this.prisma.userNewsletterTagsCounter.count({
           where: {
@@ -72,10 +71,9 @@ export class UsersService {
           tagId: tag.id,
         },
       });
-      counterNumber = tagGalleryCount + tagNewsletterCount;
       counterTag.push({
         ...tag,
-        count: counterNumber,
+        count: tagGalleryCount + tagNewsletterCount,
         gallery: tagGalleryCount,
         newsletter: tagNewsletterCount,
       });
